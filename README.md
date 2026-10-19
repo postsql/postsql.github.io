@@ -13,4 +13,3 @@ PostgreSQL architecture, storage internals, performance engineering, and extensi
      - [Agent Skill: Advanced `pgbench` Workload Execution (`pgbench_agent_skill.md`)](https://postsql.github.io/pgbench/pgbench_agent_skill.html)
      - [Agent Guide: Benchmark Decision Matrix & Tool-Calling Protocol (`pgbench_agent_decision_matrix.md`)](https://postsql.github.io/pgbench/pgbench_agent_decision_matrix.html)
      - [`pgbench` Advanced Workloads: Declarative Agent Execution Recipes (`pgbench_agent_recipes.md`)](https://postsql.github.io/pgbench/pgbench_agent_recipes.html)
-2. **[Three Ways to Rollback-Proof Writes in PostgreSQL](https://postsql.github.io/2026/10/19/rollback-proof-writes.html)**
