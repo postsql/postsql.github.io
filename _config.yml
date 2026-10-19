@@ -1,0 +1,18 @@
+title: "PostSQL Engineering Blog"
+author: "Hannu Krosing"
+description: "PostgreSQL architecture, performance engineering, and extensions — why and how PostgreSQL is so much more than just an SQL database."
+url: "https://postsql.github.io"
+baseurl: ""
+theme: minima
+future: true
+header_pages: []
+markdown: kramdown
+kramdown:
+  input: GFM
+  math_engine: mathjax
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      render_with_liquid: false

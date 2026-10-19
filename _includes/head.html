@@ -1,0 +1,48 @@
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {%- seo -%}
+  <link rel="stylesheet" href="{{ "/assets/main.css" | relative_url }}">
+  {%- feed_meta -%}
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]'], ['$$', '$$']] }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <style>
+    @media screen and (min-width: 900px) {
+      .wrapper { max-width: calc(960px - (30px * 2)); }
+    }
+    .post-content table, .page-content table { display: block; width: 100%; overflow-x: auto; }
+    .post-content img, .page-content img { max-width: 100%; height: auto; display: block; margin: 16px auto; }
+    .gh-callout { border-left: 4px solid #0969da; background: #f6f8fa; padding: 12px 16px; margin: 16px 0; border-radius: 0 6px 6px 0; color: #1f2328; font-style: normal; letter-spacing: normal; font-size: 16px; }
+    .gh-callout p:last-child { margin-bottom: 0; }
+    .gh-callout-important { border-left-color: #8250df; background: #fbefff; }
+    .gh-callout-warning { border-left-color: #9a6700; background: #fff8c5; }
+    .gh-callout-title { font-weight: 600; margin-bottom: 4px; display: block; color: #0969da; }
+    .gh-callout-important .gh-callout-title { color: #8250df; }
+    .gh-callout-warning .gh-callout-title { color: #9a6700; }
+  </style>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      document.querySelectorAll("blockquote").forEach(function(bq) {
+        var p = bq.querySelector("p");
+        if (!p) return;
+        var m = p.innerHTML.match(/^\[!(NOTE|IMPORTANT|TIP|WARNING|CAUTION)\]\s*(?:<br\s*\/?>|\n)?/i);
+        if (m) {
+          var kind = m[1].toUpperCase();
+          p.innerHTML = p.innerHTML.slice(m[0].length);
+          bq.classList.add("gh-callout");
+          if (kind === "IMPORTANT") bq.classList.add("gh-callout-important");
+          if (kind === "WARNING" || kind === "CAUTION") bq.classList.add("gh-callout-warning");
+          var title = document.createElement("span");
+          title.className = "gh-callout-title";
+          title.textContent = kind.charAt(0) + kind.slice(1).toLowerCase();
+          bq.insertBefore(title, bq.firstChild);
+        }
+      });
+    });
+  </script>
+</head>
