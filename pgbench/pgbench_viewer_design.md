@@ -91,7 +91,7 @@ Instead of a generic unformatted loop over cells, the Data Explorer uses a **two
 
 2. **Python Metatemplate Generator (`build_result_template(columns_meta)`)**:
    - A Python function inspects the inferred type and name of each column in the JSON result (`numeric`/`float` latency/TPS/pct, `boolean` SLA/validation, `verdict` string, `jsonb`, or timestamp) and **dynamically generates a specialized `bottle.SimpleTemplate` (`stpl`) source string** tailored to that exact result schema:
-     - Columns ending in `_ms`, `_us`, `_sec`, `tps`, or `pct` get right-aligned numeric formatting (`{{"{:.3f}".format(row["..."])}}`) and inline proportional bar rules.
+     - Columns ending in `_ms`, `_us`, `_sec`, `tps`, or `pct` get right-aligned numeric formatting (`{% raw %}{{"{:.3f}".format(row["..."])}}{% endraw %}`) and inline proportional bar rules.
      - `passed` / `validation_ok` / `verdict` columns compile into semantic badge markup (`<mark>`).
      - If numeric x/y series columns are detected (e.g., `elapsed_sec` or `interval_start_sec` + `tps`/`latency_avg_ms`), the metatemplate automatically injects a `<canvas>` / `<svg>` bound to the WASM chart renderer!
    - The generated template string is also displayed in a collapsible `<details><summary>View Generated Bottle Metatemplate</summary><pre>...</pre></details>` panel so users can inspect how the template was synthesized.
