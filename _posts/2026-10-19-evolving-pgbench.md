@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Evolving pgbench into a Universal Database Benchmark Engine: OLTP, HTAP, Property Graphs, and Vector Search"
-date: 2026-10-19
+date: 2026-10-19 12:00:00 +0000
 author: Hannu Krosing
 render_with_liquid: false
 ---

@@ -5,7 +5,8 @@ url: "https://postsql.github.io"
 baseurl: ""
 theme: minima
 future: true
-header_pages: []
+header_pages:
+  - index.md
 markdown: kramdown
 kramdown:
   input: GFM

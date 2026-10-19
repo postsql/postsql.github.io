@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Three Ways to Rollback-Proof Writes in PostgreSQL"
-date: 2026-10-19
+date: 2026-10-19 10:00:00 +0000
 author: Hannu Krosing
 render_with_liquid: false
 ---
