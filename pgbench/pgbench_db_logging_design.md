@@ -350,6 +350,6 @@ Located in `src/bin/pgbench/viewer/pgbench_viewer.py` (documented in `src/bin/pg
 1. **SQL Data Explorer with Python Metatemplates**:
    - Includes 6 curated analytical presets (Runs Overview, Latest Run Breakdown, Top Slowest Commands, Per-Second Throughput & Tail Latency from `pgbench_tx_log`, Vector Recall@K & Index Aging, Live Progress Stream) plus custom read-only SQL execution.
    - **Python Metatemplate Generator (`generate_explorer_stpl_metatemplate`)**: Inspects the JSON result's column names and runtime types to classify each column (`run_link`, `badge`, `meter_pct`, `meter_ratio`, `metric_num`, `num`, `json`, `text`) and dynamically synthesizes a custom `bottle.SimpleTemplate` (`stpl`) template string with hyperlinks, status badges, inline visual percentage/recall meter bars, right-aligned monospace numbers, and collapsible JSON trees. The synthesized `stpl` source is inspectable directly in the UI.
-2. **Minimalistic Diagram Framework (`pgbench_chart.wasm`)**:
-   - A self-contained 439-byte WebAssembly binary (`pgbench_chart.wasm`, also embedded as Base64) exporting `memory`, `series_min`, `series_max`, `series_mean`, and `project_1d`.
+2. **Minimalistic Diagram Framework (`wasm/pgbench_chart.wasm` & `src/`)**:
+   - A self-contained 439-byte WebAssembly binary (`wasm/pgbench_chart.wasm`, expanded inline as Base64 via `html/wasm_chart_module.html.stpl` and assembled from `src/`) exporting `memory`, `series_min`, `series_max`, `series_mean`, and `project_1d`.
    - Computes series statistics and projects data arrays into SVG viewport coordinates directly in WebAssembly `Float64Array` linear memory with zero external JavaScript charting dependencies.

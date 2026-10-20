@@ -18,8 +18,9 @@ render_with_liquid: false
 2. **Regular Telemetry Commits for Real-Time Visibility**:
    - In `logdb.c`, `pgbench_progress_log` (`-P`) commits every interval, and `stream` mode (`pgbench_agg_log` / `pgbench_tx_log`) commits each flushed `COPY ... FROM STDIN` batch (`PQputCopyEnd` + re-initiate `COPY` on next flush or interval tick).
    - Because stream tables are `UNLOGGED` (`--log-db-unlogged`), committing a batch does not trigger a WAL flush (`XLogFlush`) on the secondary database, keeping ingestion overhead near zero while making in-flight rows immediately visible under PostgreSQL `READ COMMITTED`.
-3. **Zero-Build, Single-File Simplicity**:
-   - Built with standalone `bottle.py` + `Water.css` + an embedded WebAssembly (`pgbench_chart.wasm`) micro-plotter (439-byte binary that computes SVG polyline/bar coordinates and scales directly from JSON arrays). See `src/bin/pgbench/viewer/README.md` for complete CLI usage and endpoint documentation.
+3. **Zero-Build, Modular Runtime & Source Separation (`html/`, `css/`, `wasm/`, `src/`)**:
+   - Built with standalone `bottle.py` (`SimpleTemplate`), `Water.css` (`css/water.css` + `css/viewer.css`), modular HTML templates (`html/*.html.stpl`), and a 439-byte WebAssembly (`wasm/pgbench_chart.wasm`) micro-plotter that computes SVG polyline/bar coordinates and scales directly from JSON arrays.
+   - `PartsLoader` in `pgbench_viewer.py` loads templates, stylesheets, and the WASM binary on demand with `st_mtime` hot-reload caching, while non-runtime WebAssembly sources and the zero-dependency assembler (`src/pgbench_chart.wat`, `src/pgbench_chart.c`, `src/build_wasm.py`) are isolated in `src/`. See `src/bin/pgbench/viewer/README.md` for complete CLI usage and endpoint documentation.
 
 ---
 
@@ -89,18 +90,19 @@ Instead of a generic unformatted loop over cells, the Data Explorer uses a **two
      ) FROM q;
      ```
 
-2. **Python Metatemplate Generator (`build_result_template(columns_meta)`)**:
-   - A Python function inspects the inferred type and name of each column in the JSON result (`numeric`/`float` latency/TPS/pct, `boolean` SLA/validation, `verdict` string, `jsonb`, or timestamp) and **dynamically generates a specialized `bottle.SimpleTemplate` (`stpl`) source string** tailored to that exact result schema:
-     - Columns ending in `_ms`, `_us`, `_sec`, `tps`, or `pct` get right-aligned numeric formatting (`{% raw %}{{"{:.3f}".format(row["..."])}}{% endraw %}`) and inline proportional bar rules.
-     - `passed` / `validation_ok` / `verdict` columns compile into semantic badge markup (`<mark>`).
-     - If numeric x/y series columns are detected (e.g., `elapsed_sec` or `interval_start_sec` + `tps`/`latency_avg_ms`), the metatemplate automatically injects a `<canvas>` / `<svg>` bound to the WASM chart renderer!
-   - The generated template string is also displayed in a collapsible `<details><summary>View Generated Bottle Metatemplate</summary><pre>...</pre></details>` panel so users can inspect how the template was synthesized.
+2. **Python Metatemplate Generator (`generate_explorer_stpl_metatemplate` + `html/explorer_table_meta.html.stpl`)**:
+   - `infer_column_Descriptors()` inspects the inferred type and name of each column in the JSON result (`run_link`, `badge`, `meter_pct`, `meter_ratio`, `metric_num`, `num`, `json`, or `text`) and expands the Stage-1 metatemplate `html/explorer_table_meta.html.stpl` (using custom delimiter syntax `<@ @> @ {| |}`) into a **specialized Stage-2 `bottle.SimpleTemplate` (`stpl`) source string** tailored to that exact result schema:
+     - Columns ending in `_ms`, `_us`, `_sec`, `tps`, or `pct` get right-aligned numeric formatting and inline proportional meter bars (`meter_pct` / `meter_ratio`).
+     - `status` / `passed` / `validation_ok` / `verdict` / `sla_all_passed` columns compile into semantic badge markup.
+     - When rows are returned, `html/explorer_body.html.stpl` includes `html/wasm_chart_box.html.stpl` bound to the WASM chart renderer (`renderExplorerChart()`).
+   - The generated Stage-2 template string is also displayed in a collapsible `<details><summary>Inspect Generated stpl Metatemplate Source</summary><pre>...</pre></details>` panel so users can inspect how the template was synthesized.
 
-### 4.2 Minimalistic WebAssembly (WASM) Diagram Framework
+### 4.2 Minimalistic WebAssembly (WASM) Diagram Framework (`wasm/pgbench_chart.wasm` & `src/`)
 To keep the frontend dependency-free and fast while supporting rich charts:
 
-- The viewer embeds a tiny, self-contained **WebAssembly layout & scaling module** (`chart_kernel.wasm`, ~1.5 KB base64-encoded directly in the page and compiled from hand-written WAT/C):
-  - **Exported WASM functions**:
-    - `compute_line_points(ptr, len, width, height, pad)` $$\rightarrow$$ normalizes min/max bounds in linear memory and computes screen $$(x_i, y_i)$$ coordinates for time-series curves (`tps`, `latency_avg_ms`, `lag_avg_ms`).
-    - `compute_bar_rects(ptr, len, width, height, pad)` $$\rightarrow$$ computes bar heights and positions for HDR latency percentiles (`p50`..`p99.9`), 10-bucket Recall@K histograms, and multi-run TPS comparisons.
-- A ~60-line vanilla JS wrapper feeds numeric arrays from the page's single JSON object into the WASM linear memory (`Float64Array`) and renders crisp, responsive `<svg>` charts that automatically adapt to `Water.css` light/dark mode (`currentColor` / CSS variables).
+- The viewer loads a 439-byte **WebAssembly statistical & 1D projection module** (`wasm/pgbench_chart.wasm`, expanded inline as Base64 via `html/wasm_chart_module.html.stpl` with `/static/pgbench_chart.wasm` streaming fallback, and built reproducibly from `src/pgbench_chart.wat`, `src/pgbench_chart.c`, and `src/build_wasm.py`):
+  - **Exported WASM interface**:
+    - `memory` (2 pages = 128 KiB linear memory for zero-copy `Float64Array` views).
+    - `series_min(ptr, n) -> f64`, `series_max(ptr, n) -> f64`, `series_mean(ptr, n) -> f64` $$\rightarrow$$ compute `f64` series bounds and mean in linear memory.
+    - `project_1d(in_ptr, n, min_v, max_v, out_start, out_span, out_ptr)` $$\rightarrow$$ normalizes and projects data arrays into SVG viewport coordinates for time-series curves (`tps`, `latency_avg_ms`), HDR latency percentiles (`p50`..`p99.9`), multi-run TPS comparisons, and Explorer bar charts.
+- The JS bridge in `html/wasm_chart_module.html.stpl` feeds numeric arrays from the page's single JSON object into WASM linear memory (`Float64Array`) and renders crisp, responsive `<svg>` charts (`html/wasm_chart_box.html.stpl`) that automatically adapt to `Water.css` light/dark mode (`currentColor` / CSS variables).
