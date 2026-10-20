@@ -245,10 +245,10 @@ To visualize both completed and **currently running** benchmarks without pulling
 
 1. **Single-JSON-from-Database Architecture (`pgbench_viewer_payload_json`)**:
    Every Phase 1 view (`single`, `compare`, `multi`, and `live`) executes a single `SELECT pgbench_viewer_payload_json(...)` query. For active `status = 'running'` runs, PostgreSQL computes real-time `p50`/`p90`/`p95`/`p99`/`p99.9` latency percentiles and live Recall@K directly from committed `pgbench_tx_log` and `pgbench_progress_log` batches.
-2. **Classless `Water.css` + `bottle.py` (`stpl`)**:
-   Semantic HTML tables (`<table>`, `<details>`, `<kbd>`, `<mark>`) are styled automatically by inlined `Water.css` rules with zero custom CSS layout classes.
-3. **439-Byte Hand-Crafted WebAssembly Diagram Projector (`pgbench_chart.wasm`)**:
-   Time-series TPS, latency percentiles, Recall@K histograms, and `Q1`-vs-`Q4` aging bars are projected into SVG `<polyline>` and `<rect>` coordinates in browser memory via a 439-byte WASM binary (`series_min`, `series_max`, `series_mean`, `project_1d` over `Float64Array`).
+2. **Classless `Water.css` (`css/`) + Modular `bottle.py` (`html/*.html.stpl`)**:
+   Semantic HTML tables (`<table>`, `<details>`, `<kbd>`, `<mark>`) are styled automatically by `css/water.css` and `css/viewer.css` and rendered from modular `SimpleTemplate` views.
+3. **439-Byte Hand-Crafted WebAssembly Diagram Projector (`wasm/pgbench_chart.wasm` & `src/`)**:
+   Time-series TPS, latency percentiles, Recall@K histograms, and `Q1`-vs-`Q4` aging bars are projected into SVG `<polyline>` and `<rect>` coordinates in browser memory via a 439-byte WASM binary (`wasm/pgbench_chart.wasm`, built from `src/pgbench_chart.wat`, `src/pgbench_chart.c`, and `src/build_wasm.py`, exporting `series_min`, `series_max`, `series_mean`, `project_1d` over `Float64Array`).
 4. **Phase 2 SQL Data Explorer with Python Metatemplate Generator**:
    The `/explorer` tab lets users run 6 curated diagnostic presets (or custom read-only `SELECT`/`WITH` queries over `pgbench_*` tables). A Python metatemplate generator inspects the PostgreSQL result-set columns at runtime, synthesizes a custom `bottle.SimpleTemplate` (`stpl`) template with clickable `run_id` badges, verdict pills, and right-aligned numeric formatting, and auto-renders a WASM time-series or bar chart whenever numeric series columns are detected.
 
